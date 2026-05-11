@@ -1,0 +1,64 @@
+{
+  "_id": {
+    "$oid": "69ea4b54355da8db2d2053b9"
+  },
+  "deleted": 0,
+  "createdBy": {
+    "$oid": "5530363b9849801a0015938f"
+  },
+  "updatedBy": {
+    "$oid": "5530363b9849801a0015938f"
+  },
+  "name": "Colonoscopy Prep Workflow",
+  "description": "An AI-driven colonoscopy prep workflow that automates patient guidance and operational coordination before endoscopy procedures. The workflow handles inbound prep questions, delivers proactive reminders and prep instructions, supports reschedule/cancel requests, and escalates clinical questions to staff when appropriate.\n\nThe goal is to reduce prep-related call volume, improve patient adherence to prep instructions, decrease same-day cancellations and no-shows, and improve adequate-prep rates through an Epic-integrated, end-to-end patient communication workflow.",
+  "enabled": true,
+  "createdAt": {
+    "$date": "2026-04-23T16:39:48.978Z"
+  },
+  "updatedAt": {
+    "$date": "2026-05-11T20:05:30.904Z"
+  },
+  "rateLimiter": {
+    "rate": 10000,
+    "perInSeconds": 3600
+  },
+  "__v": 0,
+  "followups": {
+    "followup": "69ea4c8e355da8db2d208514",
+    "conditions": [],
+    "pushPatientJourneyEvent": true,
+    "true": {
+      "followup": "69ea4c8e19759444d9793218",
+      "conditions": [],
+      "pushPatientJourneyEvent": true,
+      "true": {
+        "followup": "69ea4c8e1e9331ac23728144",
+        "conditions": [],
+        "pushPatientJourneyEvent": true,
+        "true": {
+          "followup": "69ea4c8e230089b2842183df",
+          "conditions": [],
+          "pushPatientJourneyEvent": true,
+          "true": {
+            "followup": "69ea4c8e9b1762f4f4831878",
+            "conditions": [],
+            "pushPatientJourneyEvent": true,
+            "true": {
+              "followup": "69ea4d52e2c8abbd8e110444",
+              "conditions": [],
+              "pushPatientJourneyEvent": true,
+              "true": {
+                "followup": "69ea4d51b66cfa738cbb5442",
+                "conditions": [],
+                "pushPatientJourneyEvent": true
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "publishedTo": {
+    "$oid": "69fcfe122fe2c3cb19f67bcc"
+  }
+}

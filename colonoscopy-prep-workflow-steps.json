@@ -1,0 +1,374 @@
+{
+    "size": 7,
+    "response": [
+        {
+            "_id": "69ea4c8e19759444d9793218",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Execute JavaScript",
+            "model": "none",
+            "operation": "updated",
+            "action": "execute-javascript",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "none",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": false,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "executeJavaScript": "const session = context.get('session')\nconst LUMA_API = 'https://api.lumahealth.io/api';\nconst api = axios.create({\n    baseURL: LUMA_API,\n    headers: {\n      'X-Access-Token': session.token,\n    },\n  });\n\nfunction getPatientIdFromRawHl7(rawHl7) {\n  const content = rawHl7.content;\n\n  if (!content || !content.PID) {\n    log('no PID segment found in content');\n    return null;\n  }\n\n  const patientIdentifierList = content.PID[2];\n\n  if (!patientIdentifierList) {\n    log('no patient identifier found in PID segment');\n    return null;\n  }\n\n  const patientId = patientIdentifierList.split('^')[0];\n\n  log(`extracted patient ID: ${patientId}`);\n\n  return patientId;\n}\n\nasync function findPatient(patientExternalId) {\n  log(`searching for patient ${patientExternalId}`);\n\n  const response = await api.get(`/patients/search?value=id:${patientExternalId}`);\n  const data = response.data;\n\n  if (!data || !Array.isArray(data)) {\n    return null;\n  }\n\n  if (data.length === 1) {\n    return data[0];\n  }\n\n  log(`unexpectedly found ${data.length} patients`);\n  return null;\n}\n\nlet patientExternalId;\n\ntry {\n  const rawHl7 = context.get('modelObject');\n  patientExternalId = getPatientIdFromRawHl7(rawHl7);\n\n  const patient = await findPatient(patientExternalId);\n\n  if (patient) {\n    log('found patient; setting in context');\n\n    context.set('followupWorkflowInstanceMergeContext', {\n      patient: patient._id\n    });\n    \n    log(context)\n    const followupWorkflowInstance = context.hasGet('followupWorkflowInstance')\n    const instanceResponse = await api.put(`/v2/followupWorkflowInstances/${followupWorkflowInstance._id}`, {\n     patient: patient._id\n     });\n     \n     log(`instance update response:`, instanceResponse)\n  }\n} catch (err) {\n  log(`patient ${patientExternalId} not found`);\n  log(err);\n}\n\nreturn { patientId: patientExternalId };",
+            "sendMessageShouldSkipReminderDeduping": false,
+            "filters": [],
+            "createdAt": "2026-04-23T16:45:02.708Z",
+            "updatedAt": "2026-05-11T20:05:30.870Z",
+            "__v": 0,
+            "parentFollowup": "69ea4c8e355da8db2d208514",
+            "parentModel": "appointment",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 110,
+                    "_id": "69ea4fbae6d315ee20464bb9"
+                },
+                "_id": "69ea4fbae6d315ee20464bb8"
+            }
+        },
+        {
+            "_id": "69ea4c8e1e9331ac23728144",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Invoke Luma Library Agent",
+            "model": "none",
+            "operation": "updated",
+            "action": "invoke-system-agent",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "sms",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": true,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "sendMessageShouldSkipReminderDeduping": false,
+            "configuration": {
+                "invokeAgent": {
+                    "instructions": "Hi {{followupWorkflowInstanceContext.patient.firstname}}, this is the {{user.name}} care team reaching out about your upcoming colonoscopy. Wed like to review your prep instructions and help make sure youre ready for your procedure. When would be a good time for a quick call?",
+                    "agent": "6a0218539a68f3b86917724b",
+                    "customVariables": [],
+                    "tools": [],
+                    "handoffs": [],
+                    "maxTurns": 10,
+                    "timeout": 60,
+                    "timeoutUnit": "seconds",
+                    "singleTurn": false
+                }
+            },
+            "filters": [],
+            "createdAt": "2026-04-23T16:45:02.722Z",
+            "updatedAt": "2026-05-11T20:05:30.861Z",
+            "__v": 0,
+            "parentFollowup": "69ea4c8e19759444d9793218",
+            "parentModel": "none",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 110,
+                    "_id": "69ea4fba8bd5be12d5fbefcc"
+                },
+                "_id": "69ea4fba8bd5be12d5fbefcb"
+            }
+        },
+        {
+            "_id": "69ea4c8e230089b2842183df",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Wait",
+            "model": "none",
+            "operation": "updated",
+            "action": "wait",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "none",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": true,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "sendMessageShouldSkipReminderDeduping": false,
+            "configuration": {
+                "wait": {
+                    "anchorType": "date",
+                    "waitTimeInSeconds": 40,
+                    "waitObjectDatePath": "{{followupWorkflowInstanceContext.engagement.context.chosen_time}}"
+                }
+            },
+            "filters": [],
+            "createdAt": "2026-04-23T16:45:02.706Z",
+            "updatedAt": "2026-05-11T20:05:30.872Z",
+            "__v": 0,
+            "parentFollowup": "69ea4c8e1e9331ac23728144",
+            "parentModel": "none",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 80,
+                    "_id": "69ea4f9daa7f8b416c210429"
+                },
+                "_id": "69ea4f9daa7f8b416c210428"
+            }
+        },
+        {
+            "_id": "69ea4c8e355da8db2d208514",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Appointment Updated",
+            "model": "appointment",
+            "operation": "updated",
+            "filters": [
+                {
+                    "field": "status",
+                    "value": "confirmed",
+                    "comparision": "eq"
+                },
+                {
+                    "field": "patient._id",
+                    "value": "69ea3c9feaf872a826ed0d63",
+                    "comparision": "eq"
+                }
+            ],
+            "action": "none",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "none",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": true,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "699f48d775e3596b78cdde98",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "sendMessageShouldSkipReminderDeduping": false,
+            "createdAt": "2026-04-23T16:45:02.768Z",
+            "updatedAt": "2026-05-11T20:05:30.868Z",
+            "__v": 1,
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 110
+                },
+                "_id": "69ea4f9ea74e604344bac930"
+            }
+        },
+        {
+            "_id": "69ea4c8e9b1762f4f4831878",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Invoke Luma Library Agent",
+            "model": "none",
+            "operation": "updated",
+            "action": "invoke-system-agent",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "voice",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": true,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "sendMessageShouldSkipReminderDeduping": false,
+            "configuration": {
+                "invokeAgent": {
+                    "instructions": "Hi {{followupWorkflowInstanceContext.patient.firstname}}, this is {{user.name}} calling about your upcoming colonoscopy. Were checking in to make sure you have everything you need for your procedure and prep. How are you doing today?",
+                    "agent": "6a0211be78f3c9cfe215fab2",
+                    "customVariables": [],
+                    "tools": [],
+                    "handoffs": [],
+                    "maxTurns": 10,
+                    "timeout": 60,
+                    "timeoutUnit": "seconds",
+                    "singleTurn": false
+                }
+            },
+            "filters": [],
+            "createdAt": "2026-04-23T16:45:02.716Z",
+            "updatedAt": "2026-05-11T20:05:30.866Z",
+            "__v": 0,
+            "parentFollowup": "69ea4c8e230089b2842183df",
+            "parentModel": "none",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 77
+                },
+                "_id": "69ea57c432d1dd97dbca3218"
+            }
+        },
+        {
+            "_id": "69ea4d51b66cfa738cbb5442",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Invoke EHR API",
+            "model": "none",
+            "operation": "updated",
+            "action": "invoke-integrator-api",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "template": "",
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "none",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": false,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "sendMessageShouldSkipReminderDeduping": false,
+            "configuration": {
+                "invokeExternalApiConfiguration": {
+                    "headers": [],
+                    "parameters": [],
+                    "integratorApi": "SendMessage",
+                    "method": "POST",
+                    "body": {
+                        "MessageType": "9999900",
+                        "MessagePriority": "",
+                        "SenderID": "FAMMD",
+                        "SenderIDType": "External",
+                        "MessageText": "answerList",
+                        "PatientID": "Z8315",
+                        "PatientIDType": "External",
+                        "ContactID": "",
+                        "ContactIDType": "",
+                        "Recipients": [
+                            {
+                                "ID": "LUMAHEALTH",
+                                "IDType": "External",
+                                "IsPool": ""
+                            }
+                        ]
+                    },
+                    "_id": "69ea4d51b66cfa738cbb5443"
+                }
+            },
+            "filters": [],
+            "createdAt": "2026-04-23T16:48:17.997Z",
+            "updatedAt": "2026-05-11T20:05:30.859Z",
+            "__v": 0,
+            "parentFollowup": "69ea4d52e2c8abbd8e110444",
+            "parentModel": "none",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 47
+                },
+                "_id": "69ebd6f8a69dab26b633ac72"
+            }
+        },
+        {
+            "_id": "69ea4d52e2c8abbd8e110444",
+            "user": "69ea3c9c26af87a0d7aa662f",
+            "title": "Execute JavaScript",
+            "model": "none",
+            "operation": "updated",
+            "action": "execute-javascript",
+            "actionAtUnit": "minutes",
+            "actionAtAnchor": "operation",
+            "anchorAtOperationPastEventsTolerance": 24,
+            "type": "followup",
+            "secure": false,
+            "forceCommunicationAs": "none",
+            "campaignChannelsOverride": [],
+            "ipWhitelist": [],
+            "delay": 0,
+            "enabled": false,
+            "createdBy": "5530363b9849801a0015938f",
+            "updatedBy": "5530363b9849801a0015938f",
+            "deleted": 0,
+            "rebuildDateRange": null,
+            "sendMessageSkipDeliveryRules": false,
+            "sendMessageSkipBlackoutRules": false,
+            "sendMessageForceTimeHour": null,
+            "sendMessageForceTimeMinute": null,
+            "sendMessageAutomaticallyHandleIrregularIntent": false,
+            "webhookHeaders": [],
+            "executeJavaScript": "return {\n  answers: context.get('followupWorkflowInstanceContext').engagement.context.questions_answers\n}",
+            "sendMessageShouldSkipReminderDeduping": false,
+            "filters": [],
+            "createdAt": "2026-04-23T16:48:18.002Z",
+            "updatedAt": "2026-05-11T20:05:30.864Z",
+            "__v": 0,
+            "parentFollowup": "69ea4c8e9b1762f4f4831878",
+            "parentModel": "none",
+            "followupWorkflow": "69ea4b54355da8db2d2053b9",
+            "stats": {
+                "counters": {
+                    "actionMatched": 47
+                },
+                "_id": "69ebd6f8a69dab26b633ac6e"
+            }
+        }
+    ]
+}
